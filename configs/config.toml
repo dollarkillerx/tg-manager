@@ -1,0 +1,15 @@
+[ServiceConfiguration]
+Port = "8080"
+Debug = true
+
+[LoggerConfiguration]
+Filename = "./logs/tg-manager.log"
+MaxSize = 10
+
+[SQLiteConfiguration]
+Path = "./data/tg-manager.db"
+
+[TelegramConfiguration]
+AppID = 35447762
+AppHash = "5d035d8fb6b8d4935f8289b80c5601db"
+SessionPath = "./data/session.json"
