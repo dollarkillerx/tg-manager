@@ -17,10 +17,10 @@ type UpdateHandler interface {
 }
 
 type Service struct {
-	appID       int
-	appHash     string
-	sessionPath string
-	handler     UpdateHandler
+	appID          int
+	appHash        string
+	sessionStorage session.Storage
+	handler        UpdateHandler
 
 	client *telegram.Client
 	api    *tg.Client
@@ -32,13 +32,13 @@ type Service struct {
 	authCodeHash string
 }
 
-func NewService(appID int, appHash, sessionPath string, handler UpdateHandler) *Service {
+func NewService(appID int, appHash string, sessionStorage session.Storage, handler UpdateHandler) *Service {
 	return &Service{
-		appID:       appID,
-		appHash:     appHash,
-		sessionPath: sessionPath,
-		handler:     handler,
-		ready:       make(chan struct{}),
+		appID:          appID,
+		appHash:        appHash,
+		sessionStorage: sessionStorage,
+		handler:        handler,
+		ready:          make(chan struct{}),
 	}
 }
 
@@ -57,7 +57,7 @@ func (s *Service) Start(ctx context.Context) error {
 	})
 
 	s.client = telegram.NewClient(s.appID, s.appHash, telegram.Options{
-		SessionStorage: &session.FileStorage{Path: s.sessionPath},
+		SessionStorage: s.sessionStorage,
 		UpdateHandler:  dispatcher,
 		Device: telegram.DeviceConfig{
 			DeviceModel:    "tg-manager",

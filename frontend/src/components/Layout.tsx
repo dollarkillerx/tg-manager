@@ -1,8 +1,8 @@
 import { NavLink, Outlet } from 'react-router-dom';
 
 const navItems = [
-  { to: '/', label: 'Dashboard' },
-  { to: '/rules', label: 'Rules' },
+  { to: '/', label: '仪表盘' },
+  { to: '/rules', label: '转发规则' },
 ];
 
 export default function Layout() {
@@ -10,7 +10,7 @@ export default function Layout() {
     <div className="flex h-screen bg-gray-100">
       <aside className="w-56 bg-white shadow-md flex flex-col">
         <div className="p-4 border-b">
-          <h1 className="text-lg font-bold text-gray-800">TG Manager</h1>
+          <h1 className="text-lg font-bold text-gray-800">TG 管理器</h1>
         </div>
         <nav className="flex-1 p-2">
           {navItems.map((item) => (

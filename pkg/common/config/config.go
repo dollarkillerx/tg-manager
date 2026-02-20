@@ -10,8 +10,13 @@ type ServiceConfiguration struct {
 	Debug bool   `mapstructure:"Debug"`
 }
 
-type SQLiteConfiguration struct {
-	Path string `mapstructure:"Path"`
+type PostgresConfiguration struct {
+	Host     string `mapstructure:"Host"`
+	Port     int    `mapstructure:"Port"`
+	User     string `mapstructure:"User"`
+	Password string `mapstructure:"Password"`
+	DBName   string `mapstructure:"DBName"`
+	SSLMode  string `mapstructure:"SSLMode"`
 }
 
 type LoggerConfig struct {
@@ -20,9 +25,8 @@ type LoggerConfig struct {
 }
 
 type TelegramConfiguration struct {
-	AppID       int    `mapstructure:"AppID"`
-	AppHash     string `mapstructure:"AppHash"`
-	SessionPath string `mapstructure:"SessionPath"`
+	AppID   int    `mapstructure:"AppID"`
+	AppHash string `mapstructure:"AppHash"`
 }
 
 func InitConfiguration(configName string, configPaths []string, config interface{}) error {

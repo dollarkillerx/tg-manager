@@ -44,10 +44,10 @@ func main() {
 	// Logger
 	logs.InitLog(appConfig.LoggerConfiguration)
 
-	// SQLite
-	db, err := client.SQLiteClient(appConfig.SQLiteConfiguration)
+	// PostgreSQL
+	db, err := client.PostgresClient(appConfig.PostgresConfiguration)
 	if err != nil {
-		log.Error().Msg("Failed to connect to SQLite")
+		log.Error().Msg("Failed to connect to PostgreSQL")
 		panic(err)
 	}
 

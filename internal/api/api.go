@@ -79,4 +79,6 @@ func (a *ApiServer) registerRpcMethods() {
 	a.rpcHandler.RegisterMethod(&RulesListMethod{storage: a.storage})
 	a.rpcHandler.RegisterMethod(&RulesUpdateMethod{storage: a.storage, engine: a.engine})
 	a.rpcHandler.RegisterMethod(&RulesDeleteMethod{storage: a.storage, engine: a.engine})
+	// Message methods
+	a.rpcHandler.RegisterMethod(&MessagesHistoryMethod{tgSvc: a.tgSvc})
 }

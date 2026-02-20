@@ -11,7 +11,7 @@ func NewStorage(db *gorm.DB) *Storage {
 }
 
 func (s *Storage) AutoMigrate() error {
-	return s.db.AutoMigrate(&ForwardRule{}, &ForwardLog{})
+	return s.db.AutoMigrate(&ForwardRule{}, &ForwardLog{}, &TelegramSession{})
 }
 
 func (s *Storage) GetDB() *gorm.DB { return s.db }

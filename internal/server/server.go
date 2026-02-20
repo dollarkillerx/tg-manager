@@ -24,10 +24,11 @@ func NewServer(st *storage.Storage, conf conf.Config) *Server {
 	engine := forwarder.NewEngine(st.GetDB())
 
 	// 2. Create Telegram service (passes engine as update handler)
+	sessionStorage := telegram.NewPostgresSessionStorage(st.GetDB())
 	tgSvc := telegram.NewService(
 		conf.TelegramConfiguration.AppID,
 		conf.TelegramConfiguration.AppHash,
-		conf.TelegramConfiguration.SessionPath,
+		sessionStorage,
 		engine,
 	)
 

@@ -17,7 +17,7 @@ type DialogInfo struct {
 	Type        string `json:"type"`
 	UnreadCount int    `json:"unread_count"`
 	LastMessage string `json:"last_message"`
-	AccessHash  int64  `json:"access_hash"`
+	AccessHash  int64  `json:"access_hash,string"`
 }
 
 // dialogs.list
@@ -51,7 +51,7 @@ type ChannelsListMethod struct {
 func (m *ChannelsListMethod) Name() string { return "channels.list" }
 func (m *ChannelsListMethod) Execute(ctx context.Context, _ json.RawMessage) (interface{}, error) {
 	api := m.tgSvc.API()
-	return fetchDialogs(ctx, api, 100, "channel")
+	return fetchDialogs(ctx, api, 100, "")
 }
 
 func fetchDialogs(ctx context.Context, api *tg.Client, limit int, filterType string) ([]DialogInfo, error) {

@@ -19,10 +19,10 @@ type RulesCreateMethod struct {
 type createRuleParams struct {
 	SourceChannelID int64  `json:"source_channel_id"`
 	SourceName      string `json:"source_name"`
-	SourceHash      int64  `json:"source_hash"`
+	SourceHash      int64  `json:"source_hash,string"`
 	TargetChannelID int64  `json:"target_channel_id"`
 	TargetName      string `json:"target_name"`
-	TargetHash      int64  `json:"target_hash"`
+	TargetHash      int64  `json:"target_hash,string"`
 	MatchPattern    string `json:"match_pattern"`
 }
 
@@ -82,10 +82,10 @@ type updateRuleParams struct {
 	ID              uint   `json:"id"`
 	SourceChannelID *int64 `json:"source_channel_id,omitempty"`
 	SourceName      *string `json:"source_name,omitempty"`
-	SourceHash      *int64  `json:"source_hash,omitempty"`
+	SourceHash      *int64  `json:"source_hash,omitempty,string"`
 	TargetChannelID *int64 `json:"target_channel_id,omitempty"`
 	TargetName      *string `json:"target_name,omitempty"`
-	TargetHash      *int64  `json:"target_hash,omitempty"`
+	TargetHash      *int64  `json:"target_hash,omitempty,string"`
 	MatchPattern    *string `json:"match_pattern,omitempty"`
 	Enabled         *bool  `json:"enabled,omitempty"`
 }

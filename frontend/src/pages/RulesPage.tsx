@@ -5,10 +5,10 @@ type ForwardRule = {
   id: number;
   source_channel_id: number;
   source_name: string;
-  source_hash: number;
+  source_hash: string;
   target_channel_id: number;
   target_name: string;
-  target_hash: number;
+  target_hash: string;
   match_pattern: string;
   enabled: boolean;
   created_at: string;
@@ -19,7 +19,13 @@ type ChannelInfo = {
   id: number;
   name: string;
   type: string;
-  access_hash: number;
+  access_hash: string;
+};
+
+const typeLabel: Record<string, string> = {
+  channel: '频道',
+  group: '群聊',
+  user: '私聊',
 };
 
 export default function RulesPage() {
@@ -43,7 +49,7 @@ export default function RulesPage() {
       setRules(r ?? []);
       setChannels(c ?? []);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to load data');
+      setError(e instanceof Error ? e.message : '加载数据失败');
     } finally {
       setLoading(false);
     }
@@ -74,7 +80,7 @@ export default function RulesPage() {
     const target = channels.find((c) => String(c.id) === targetId);
 
     if (!source || !target || !matchPattern) {
-      setError('All fields are required');
+      setError('请填写所有字段');
       return;
     }
 
@@ -104,17 +110,17 @@ export default function RulesPage() {
       resetForm();
       await loadData();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to save rule');
+      setError(e instanceof Error ? e.message : '保存规则失败');
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this rule?')) return;
+    if (!confirm('确定删除此规则？')) return;
     try {
       await rpc('rules.delete', { id });
       await loadData();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to delete rule');
+      setError(e instanceof Error ? e.message : '删除规则失败');
     }
   };
 
@@ -123,23 +129,23 @@ export default function RulesPage() {
       await rpc('rules.update', { id: rule.id, enabled: !rule.enabled });
       await loadData();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to toggle rule');
+      setError(e instanceof Error ? e.message : '切换规则状态失败');
     }
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64 text-gray-500">Loading...</div>;
+    return <div className="flex items-center justify-center h-64 text-gray-500">加载中...</div>;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-800">Forward Rules</h2>
+        <h2 className="text-xl font-bold text-gray-800">转发规则</h2>
         <button
           onClick={() => { resetForm(); setShowForm(true); }}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
         >
-          New Rule
+          新建规则
         </button>
       </div>
 
@@ -150,37 +156,37 @@ export default function RulesPage() {
       {showForm && (
         <div className="bg-white rounded-lg shadow p-4 mb-6">
           <h3 className="font-medium text-gray-700 mb-4">
-            {editingRule ? 'Edit Rule' : 'Create Rule'}
+            {editingRule ? '编辑规则' : '创建规则'}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Source Channel</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">来源</label>
               <select
                 value={sourceId}
                 onChange={(e) => setSourceId(e.target.value)}
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Select source...</option>
+                <option value="">选择来源...</option>
                 {channels.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>{c.name} [{typeLabel[c.type] ?? c.type}]</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Target Channel</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">目标</label>
               <select
                 value={targetId}
                 onChange={(e) => setTargetId(e.target.value)}
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Select target...</option>
+                <option value="">选择目标...</option>
                 {channels.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>{c.name} [{typeLabel[c.type] ?? c.type}]</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Match Pattern (regex)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">匹配规则 (正则)</label>
               <input
                 type="text"
                 value={matchPattern}
@@ -195,13 +201,13 @@ export default function RulesPage() {
               onClick={handleSubmit}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
             >
-              {editingRule ? 'Update' : 'Create'}
+              {editingRule ? '更新' : '创建'}
             </button>
             <button
               onClick={resetForm}
               className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm"
             >
-              Cancel
+              取消
             </button>
           </div>
         </div>
@@ -211,11 +217,11 @@ export default function RulesPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b text-left text-sm text-gray-500">
-              <th className="px-4 py-3">Source</th>
-              <th className="px-4 py-3">Target</th>
-              <th className="px-4 py-3">Pattern</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Actions</th>
+              <th className="px-4 py-3">来源</th>
+              <th className="px-4 py-3">目标</th>
+              <th className="px-4 py-3">匹配规则</th>
+              <th className="px-4 py-3">状态</th>
+              <th className="px-4 py-3">操作</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -233,7 +239,7 @@ export default function RulesPage() {
                         : 'bg-gray-100 text-gray-500'
                     }`}
                   >
-                    {rule.enabled ? 'Enabled' : 'Disabled'}
+                    {rule.enabled ? '已启用' : '已禁用'}
                   </button>
                 </td>
                 <td className="px-4 py-3">
@@ -242,13 +248,13 @@ export default function RulesPage() {
                       onClick={() => openEdit(rule)}
                       className="text-xs text-blue-600 hover:underline"
                     >
-                      Edit
+                      编辑
                     </button>
                     <button
                       onClick={() => handleDelete(rule.id)}
                       className="text-xs text-red-600 hover:underline"
                     >
-                      Delete
+                      删除
                     </button>
                   </div>
                 </td>
@@ -257,7 +263,7 @@ export default function RulesPage() {
             {rules.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
-                  No forwarding rules yet
+                  暂无转发规则
                 </td>
               </tr>
             )}

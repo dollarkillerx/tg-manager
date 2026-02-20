@@ -32,7 +32,7 @@ export default function AuthPage() {
       setCodeType(res.code_type);
       setStep('code');
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to send code');
+      setError(e instanceof Error ? e.message : '发送验证码失败');
     } finally {
       setLoading(false);
     }
@@ -49,7 +49,7 @@ export default function AuthPage() {
         setStep('password');
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to verify code');
+      setError(e instanceof Error ? e.message : '验证码验证失败');
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ export default function AuthPage() {
       await rpc('auth.sendPassword', { password });
       navigate('/', { replace: true });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to authenticate');
+      setError(e instanceof Error ? e.message : '认证失败');
     } finally {
       setLoading(false);
     }
@@ -71,7 +71,7 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-6">Telegram Login</h1>
+        <h1 className="text-2xl font-bold text-center mb-6">Telegram 登录</h1>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-700 rounded text-sm">{error}</div>
@@ -80,7 +80,7 @@ export default function AuthPage() {
         {step === 'phone' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">手机号码</label>
               <input
                 type="tel"
                 value={phone}
@@ -95,7 +95,7 @@ export default function AuthPage() {
               disabled={loading || !phone}
               className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? 'Sending...' : 'Send Code'}
+              {loading ? '发送中...' : '发送验证码'}
             </button>
           </div>
         )}
@@ -103,10 +103,10 @@ export default function AuthPage() {
         {step === 'code' && (
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Code sent via <strong>{codeType}</strong> to {phone}
+              验证码已通过 <strong>{codeType}</strong> 发送至 {phone}
             </p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Verification Code</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">验证码</label>
               <input
                 type="text"
                 value={code}
@@ -121,21 +121,21 @@ export default function AuthPage() {
               disabled={loading || !code}
               className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? 'Verifying...' : 'Verify Code'}
+              {loading ? '验证中...' : '验证'}
             </button>
           </div>
         )}
 
         {step === 'password' && (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">Two-factor authentication is enabled. Enter your password.</p>
+            <p className="text-sm text-gray-600">已启用两步验证，请输入密码。</p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">2FA Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">两步验证密码</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
+                placeholder="请输入密码"
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 onKeyDown={(e) => e.key === 'Enter' && handleSendPassword()}
               />
@@ -145,7 +145,7 @@ export default function AuthPage() {
               disabled={loading || !password}
               className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? 'Authenticating...' : 'Submit Password'}
+              {loading ? '验证中...' : '提交密码'}
             </button>
           </div>
         )}
