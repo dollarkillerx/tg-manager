@@ -13,6 +13,7 @@ import (
 )
 
 type Engine struct {
+	ctx       context.Context // app-lifecycle context for cancellation
 	db        *gorm.DB
 	apiGetter func() *tg.Client
 
@@ -28,6 +29,12 @@ func NewEngine(db *gorm.DB) *Engine {
 		compiled:    make(map[uint]*regexp.Regexp),
 		lastForward: make(map[uint]time.Time),
 	}
+}
+
+// SetContext stores the app-lifecycle context so background goroutines
+// (like backfill) can be cancelled on shutdown.
+func (e *Engine) SetContext(ctx context.Context) {
+	e.ctx = ctx
 }
 
 // SetAPIGetter sets the function to retrieve the Telegram API client.
@@ -136,6 +143,127 @@ func (e *Engine) handleChannelMessage(ctx context.Context, update *tg.UpdateNewC
 
 		go e.forwardMessage(ctx, msg, rule)
 	}
+}
+
+// BackfillRule fetches the latest 50 messages from the rule's source channel,
+// matches them against the rule's pattern, and forwards matches with a 1-per-minute
+// rate limit. Runs entirely in the background.
+func (e *Engine) BackfillRule(rule storage.ForwardRule) {
+	logger := log.With().Uint("rule_id", rule.ID).Logger()
+
+	if e.apiGetter == nil {
+		logger.Error().Msg("Backfill: API getter not set")
+		return
+	}
+
+	api := e.apiGetter()
+
+	// 1. Fetch latest 50 messages from source channel
+	sourcePeer := &tg.InputPeerChannel{
+		ChannelID:  rule.SourceChannelID,
+		AccessHash: rule.SourceHash,
+	}
+
+	history, err := api.MessagesGetHistory(e.ctx, &tg.MessagesGetHistoryRequest{
+		Peer:  sourcePeer,
+		Limit: 50,
+	})
+	if err != nil {
+		logger.Error().Err(err).Msg("Backfill: failed to fetch message history")
+		return
+	}
+
+	// Extract messages from the response
+	var msgs []tg.MessageClass
+	switch h := history.(type) {
+	case *tg.MessagesMessages:
+		msgs = h.Messages
+	case *tg.MessagesMessagesSlice:
+		msgs = h.Messages
+	case *tg.MessagesChannelMessages:
+		msgs = h.Messages
+	default:
+		logger.Warn().Msg("Backfill: unexpected history response type")
+		return
+	}
+
+	// 2. Compile regex
+	re, err := regexp.Compile(rule.MatchPattern)
+	if err != nil {
+		logger.Error().Err(err).Msg("Backfill: failed to compile pattern")
+		return
+	}
+
+	// 3. Collect matching messages (oldest-first for chronological forwarding)
+	var matched []*tg.Message
+	for i := len(msgs) - 1; i >= 0; i-- {
+		msg, ok := msgs[i].(*tg.Message)
+		if !ok || msg.Message == "" {
+			continue
+		}
+		if !re.MatchString(msg.Message) {
+			continue
+		}
+
+		// 4. Dedup check
+		var count int64
+		e.db.Model(&storage.ForwardLog{}).
+			Where("rule_id = ? AND message_id = ?", rule.ID, msg.ID).
+			Count(&count)
+		if count > 0 {
+			logger.Debug().Int("message_id", msg.ID).Msg("Backfill: already forwarded, skipping")
+			continue
+		}
+
+		matched = append(matched, msg)
+	}
+
+	if len(matched) == 0 {
+		logger.Info().Msg("Backfill: no new matching messages found")
+		return
+	}
+
+	logger.Info().Int("count", len(matched)).Msg("Starting backfill")
+
+	// 5. Channel-based rate-limited forwarding
+	ch := make(chan *tg.Message, len(matched))
+	for _, m := range matched {
+		ch <- m
+	}
+	close(ch)
+
+	go func() {
+		ticker := time.NewTicker(time.Minute)
+		defer ticker.Stop()
+
+		first := true
+		for msg := range ch {
+			if !first {
+				select {
+				case <-ticker.C:
+				case <-e.ctx.Done():
+					logger.Info().Msg("Backfill: cancelled by shutdown")
+					return
+				}
+			}
+			first = false
+
+			// Re-check dedup before forwarding (race with real-time forwarding)
+			var count int64
+			e.db.Model(&storage.ForwardLog{}).
+				Where("rule_id = ? AND message_id = ?", rule.ID, msg.ID).
+				Count(&count)
+			if count > 0 {
+				logger.Debug().Int("message_id", msg.ID).Msg("Backfill: already forwarded (race), skipping")
+				continue
+			}
+
+			logger.Info().Int("message_id", msg.ID).Msg("Backfill: forwarding message")
+			e.forwardMessage(e.ctx, msg, rule)
+		}
+
+		logger.Info().Msg("Backfill complete")
+	}()
 }
 
 func (e *Engine) forwardMessage(ctx context.Context, msg *tg.Message, rule storage.ForwardRule) {

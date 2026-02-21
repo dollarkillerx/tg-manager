@@ -48,6 +48,9 @@ func NewServer(st *storage.Storage, conf conf.Config) *Server {
 }
 
 func (s *Server) Run(ctx context.Context) error {
+	// Wire app context into engine so backfill goroutines cancel on shutdown
+	s.engine.SetContext(ctx)
+
 	// Start Telegram client in background
 	go func() {
 		if err := s.tgSvc.Start(ctx); err != nil {

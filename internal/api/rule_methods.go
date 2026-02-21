@@ -55,6 +55,7 @@ func (m *RulesCreateMethod) Execute(ctx context.Context, params json.RawMessage)
 	}
 
 	_ = m.engine.ReloadRules()
+	go m.engine.BackfillRule(rule)
 	return rule, nil
 }
 
