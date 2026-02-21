@@ -1,0 +1,15 @@
+services:
+  tg-manager:
+    image: tg-manager:latest
+    container_name: tg-manager
+    ports:
+      - "8121:8121"
+    volumes:
+      - ./configs/config.docker.toml:/app/configs/config.toml:ro
+      - tg-manager-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  tg-manager-logs:
+  tg-manager-data:
+

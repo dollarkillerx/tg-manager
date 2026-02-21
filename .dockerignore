@@ -1,0 +1,16 @@
+.git
+bin/
+data/
+logs/
+session.json
+frontend/node_modules/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+.env
+.idea/
+.vscode/

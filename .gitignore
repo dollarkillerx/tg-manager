@@ -37,6 +37,9 @@ tg-manager
 # Telegram session data
 session.json
 
+# Build output
+bin/
+
 # Editor/IDE
 # .idea/
 # .vscode/
